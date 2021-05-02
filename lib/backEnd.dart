@@ -16,6 +16,14 @@ class KontoStand extends ChangeNotifier{
 
 	int get occurences => 7;
 
+	bool _notify = true;
+	set notify(bool n){
+		_notify = n;
+		if (n){
+			notifyListeners();
+		}
+	}
+
 	DateTime _startDate;
 	DateTime get startDate => _startDate;
 	set startDate(date){
@@ -25,9 +33,9 @@ class KontoStand extends ChangeNotifier{
 
 	String _dateOffset;
 	Map get dateOffset => {
-		'years':_dateOffset.split('-')[0],
-		'months':_dateOffset.split('-')[1],
-		'days':_dateOffset.split('-')[2],
+		'years':int.parse(_dateOffset.split('-')[0]),
+		'months':int.parse(_dateOffset.split('-')[1]),
+		'days':int.parse(_dateOffset.split('-')[2]),
 	};
 	set dateOffset(offsetMap){
 		_dateOffset = '${offsetMap['years']}-${offsetMap['months']}-${offsetMap['days']}';
@@ -77,8 +85,9 @@ class KontoStand extends ChangeNotifier{
 		prefs.setString('startDate',_startDate.toString());
 		prefs.setString('dateOffset',_dateOffset);
 
-		print('save 2');
-
-		notifyListeners();
+		if (_notify){
+			notifyListeners();
+		}
+		
 	}
 }
