@@ -82,156 +82,196 @@ class SettingsScreen extends StatefulWidget{
 class _SettingsScreenState extends State<SettingsScreen>{
 	@override
 	Widget build(BuildContext context){
-		return WillPopScope(
-			onWillPop: () async{ //TODO: put consumer above this widget so I can cause it to notify listeners on pop
-				print("CRAP");
-				return true;
-			},
-			child:Scaffold(
-				appBar: AppBar(
-					title:Text('Einstellungen'),
-					backgroundColor: Colors.grey,
-				),
-				body:Consumer<KontoStand>(
-					builder:(context,kontoStand,child){
-						var titleStyle = TextStyle(
-							fontWeight: FontWeight.bold,
-							fontSize: 20
-						);
-						var numInputWidth = 60.0;
+		return Consumer<KontoStand>(
+			builder:(context, kontoStand, child){
+				return WillPopScope(
+					onWillPop: () async{
+						kontoStand.notify = true;
+						return true;
+					},
+					child:Scaffold(
+						appBar: AppBar(
+							title:Text('Einstellungen'),
+							backgroundColor: Colors.grey,
+						),
+						body:Builder(
+							builder:(context){
+								var titleStyle = TextStyle(
+									fontWeight: FontWeight.bold,
+									fontSize: 20
+								);
+								var numInputWidth = 60.0;
 
-						var offDayController = TextEditingController();
-						var offMonthController = TextEditingController();
-						var offYearController = TextEditingController();
-						var startAmountController = TextEditingController();
+								var offDayController = TextEditingController();
+								var offMonthController = TextEditingController();
+								var offYearController = TextEditingController();
+								var startAmountController = TextEditingController();
+								var addAmountController = TextEditingController();
 
-						void _saveInput(){
-							var newOffset = {
-								'years':int.parse('0' + offYearController.text),
-								'months':int.parse('0' + offMonthController.text),
-								'days':int.parse('0' + offDayController.text),
-							};
+								void _saveInput(){
+									var newOffset = {
+										'years':int.parse('0' + offYearController.text),
+										'months':int.parse('0' + offMonthController.text),
+										'days':int.parse('0' + offDayController.text),
+									};
 
-							if (!mapEquals(newOffset, kontoStand.dateOffset)){
-								kontoStand.notify = false;
-								kontoStand.dateOffset = newOffset;
-							}
-						}
-						var offsetMap = Map.from(kontoStand.dateOffset); //otherwise it couldn't save. This is copy.copy
-						offDayController.text = offsetMap['days'].toString();
-						offMonthController.text = offsetMap['months'].toString();
-						offYearController.text = offsetMap['years'].toString();
-						startAmountController.text = kontoStand.startAmount.replaceAll('.', '');
+									if (!mapEquals(newOffset, kontoStand.dateOffset)){
+										kontoStand.notify = false;
+										kontoStand.dateOffset = newOffset;
+									}
+								}
 
-						offDayController.addListener(_saveInput);
-						offMonthController.addListener(_saveInput);
-						offYearController.addListener(_saveInput);
+								void _saveAmountInput(){
+									kontoStand.startAmount = '0' + startAmountController.text.replaceAll(',', '.');
+									kontoStand.addAmount = '0' + addAmountController.text.replaceAll(',', '.');
+								}
 
-						return ListView(
-							children: [
-								Padding(
-									padding: EdgeInsets.all(20),
-									child: Column(
-										crossAxisAlignment: CrossAxisAlignment.start,
-										children: [
-											Text(
-												'Startdatum',
-												style:titleStyle
-											),
-											TextButton(
-												onPressed: () async{
-													final DateTime picked = await showDatePicker(
-														context: context,
-														initialDate: kontoStand.startDate,
-														firstDate: DateTime(2000),
-														lastDate: DateTime(2100));
-													if (picked != null){
-														kontoStand.notify = true;
-														kontoStand.startDate = picked;
-													}
-														
-												},
-												child:Text('${kontoStand.startDate.toString().split(' ')[0]}')
-											)
-										],
-									),
-								),
-								Padding(
-									padding: EdgeInsets.all(20),
-									child: Column(
-										crossAxisAlignment: CrossAxisAlignment.start,
-										children: [
-											Text(
-												'Datumsdifferenz',
-												style:titleStyle	
-											),
-											Row(
+								var offsetMap = Map.from(kontoStand.dateOffset); //otherwise it couldn't save. This is copy.copy
+								offDayController.text = offsetMap['days'].toString();
+								offMonthController.text = offsetMap['months'].toString();
+								offYearController.text = offsetMap['years'].toString();
+								startAmountController.text = kontoStand.startAmount.replaceAll('.', '');
+								addAmountController.text = kontoStand.addAmount.replaceAll('.', '');
+
+								offDayController.addListener(_saveInput);
+								offMonthController.addListener(_saveInput);
+								offYearController.addListener(_saveInput);
+								startAmountController.addListener(_saveAmountInput);
+								addAmountController.addListener(_saveAmountInput);
+
+								return ListView(
+									children: [
+										Padding(
+											padding: EdgeInsets.all(20),
+											child: Column(
+												crossAxisAlignment: CrossAxisAlignment.start,
 												children: [
-													Container(
-														margin: EdgeInsets.only(right: 10),
-														width: numInputWidth,
-														child:TextField(												decoration: InputDecoration(
-																labelText: 'Jahre',
+													Text(
+														'Startdatum',
+														style:titleStyle
+													),
+													TextButton(
+														onPressed: () async{
+															final DateTime picked = await showDatePicker(
+																context: context,
+																initialDate: kontoStand.startDate,
+																firstDate: DateTime(2000),
+																lastDate: DateTime(2100));
+															if (picked != null){
+																kontoStand.notify = true;
+																kontoStand.startDate = picked;
+															}
+																
+														},
+														child:Text('${kontoStand.startDate.toString().split(' ')[0]}')
+													)
+												],
+											),
+										),
+										Padding(
+											padding: EdgeInsets.all(20),
+											child: Column(
+												crossAxisAlignment: CrossAxisAlignment.start,
+												children: [
+													Text(
+														'Datumsdifferenz',
+														style:titleStyle	
+													),
+													Row(
+														children: [
+															Container(
+																margin: EdgeInsets.only(right: 10),
+																width: numInputWidth,
+																child:TextField(
+																	decoration: InputDecoration(
+																		labelText: 'Jahre',
+																	),
+																	keyboardType: TextInputType.number,
+																	inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+																	controller: offYearController,
+																),
 															),
-															keyboardType: TextInputType.number,
-															inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-															controller: offYearController,
-														),
+															Container(
+																margin: EdgeInsets.only(right: 10),
+																width: numInputWidth,
+																child:TextField(
+																	decoration: InputDecoration(
+																		labelText: 'Monate',
+																	),
+																	keyboardType: TextInputType.number,
+																	inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+																	controller: offMonthController,
+																),
+															),
+															Container(
+																width: numInputWidth,
+																child:TextField(
+																	decoration: InputDecoration(
+																		labelText: 'Tage',
+																	),
+																	keyboardType: TextInputType.number,
+																	inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+																	controller: offDayController,
+																),
+															)
+														],
+													)
+												],
+											),
+										),
+										Padding(
+											padding: EdgeInsets.all(20),
+											child: Column(
+												crossAxisAlignment: CrossAxisAlignment.start,
+												children: [
+													Text(
+														'Startkapital',
+														style:titleStyle
 													),
 													Container(
-														margin: EdgeInsets.only(right: 10),
-														width: numInputWidth,
-														child:TextField(												decoration: InputDecoration(
-																labelText: 'Monate',
+														width: 60,
+														child:TextField(
+															decoration: InputDecoration(
+																labelText: 'Betrag',
 															),
 															keyboardType: TextInputType.number,
-															inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-															controller: offMonthController,
-														),
-													),
-													Container(
-														width: numInputWidth,
-														child:TextField(												decoration: InputDecoration(
-																labelText: 'Tage',
-															),
-															keyboardType: TextInputType.number,
-															inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-															controller: offDayController,
+															inputFormatters: [FilteringTextInputFormatter.allow(RegExp('[0-9,]'))],
+															controller: startAmountController,
 														),
 													)
 												],
-											)
-										],
-									),
-								),
-								Padding(
-									padding: EdgeInsets.all(20),
-									child: Column(
-										crossAxisAlignment: CrossAxisAlignment.start,
-										children: [
-											Text(
-												'Startkapital',
-												style:titleStyle
 											),
-											Container(
-												width: 80,
-												child:TextField(												decoration: InputDecoration(
-														labelText: 'Betrag',
+										),
+										Padding(
+											padding: EdgeInsets.all(20),
+											child: Column(
+												crossAxisAlignment: CrossAxisAlignment.start,
+												children: [
+													Text(
+														'Sparbetrag',
+														style:titleStyle
 													),
-													keyboardType: TextInputType.number,
-													inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-													controller: startAmountController,
-												),
-											)
-										],
-									),
-								),
-							],
-						);
-					}
-				)
-			)
-
+													Container(
+														width: 60,
+														child:TextField(
+															decoration: InputDecoration(
+																labelText: 'Betrag',
+															),
+															keyboardType: TextInputType.number,
+															inputFormatters: [FilteringTextInputFormatter.allow(RegExp('[0-9,]'))],
+															controller: addAmountController,
+														),
+													)
+												],
+											),
+										),
+									],
+								);
+							}
+						)
+					)
+				);
+			}
 		);
 	}
 }

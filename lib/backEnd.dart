@@ -8,9 +8,15 @@ class KontoStand extends ChangeNotifier{
 
 	int _startAmount;
 	String get startAmount => '${_prettyPrint(_startAmount)}';
+	set startAmount(String s){
+		_startAmount = (double.parse(s)*100).round();
+	}
 	
 	int _addAmount;
 	String get addAmount => '${_prettyPrint(_addAmount)}';
+	set addAmount(String s){
+		_addAmount = (double.parse(s)*100).round();
+	}
 	
 	String get currentAmount => '${_prettyPrint(140397)}';
 
