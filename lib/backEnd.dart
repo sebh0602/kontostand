@@ -6,21 +6,21 @@ class KontoStand extends ChangeNotifier{
 		_loadVariables();
 	}
 
-	int _startAmount;
+	int _startAmount = 0;
 	String get startAmount => '${_prettyPrint(_startAmount)}';
 	set startAmount(String s){
 		_startAmount = (double.parse(s)*100).round();
 	}
 	
-	int _addAmount;
+	int _addAmount = 0;
 	String get addAmount => '${_prettyPrint(_addAmount)}';
 	set addAmount(String s){
 		_addAmount = (double.parse(s)*100).round();
 	}
 	
-	String get currentAmount => '${_prettyPrint(140397)}';
-
-	int get occurences => 7;
+	String get currentAmount {
+		return '${_prettyPrint(_startAmount + occurences*_addAmount)}';
+	}
 
 	bool _notify = true;
 	set notify(bool n){
@@ -30,14 +30,14 @@ class KontoStand extends ChangeNotifier{
 		}
 	}
 
-	DateTime _startDate;
+	DateTime _startDate = DateTime.now();
 	DateTime get startDate => _startDate;
 	set startDate(date){
-		_startDate = date;
+		_startDate = _utcShift(date);
 		_saveVariables();
 	}
 
-	String _dateOffset;
+	String _dateOffset = '0-0-0';
 	Map get dateOffset => {
 		'years':int.parse(_dateOffset.split('-')[0]),
 		'months':int.parse(_dateOffset.split('-')[1]),
@@ -46,6 +46,38 @@ class KontoStand extends ChangeNotifier{
 	set dateOffset(offsetMap){
 		_dateOffset = '${offsetMap['years']}-${offsetMap['months']}-${offsetMap['days']}';
 		_saveVariables();
+	}
+
+	int get occurences {
+		var oc = 0;
+		var laterDate = _incrementDate(_startDate);
+		if (_dateOffset != '0-0-0'){
+			while (laterDate.isBefore(_utcShift(DateTime.now()))){
+				oc += 1;
+				print(laterDate);
+				laterDate = _incrementDate(laterDate);
+			}
+			print('--------');
+		}
+
+		return oc;
+	}
+
+	DateTime _incrementDate(DateTime oldDate){
+		var newDate = oldDate.add(Duration(days:dateOffset['days']));
+		if (dateOffset['months'] + dateOffset['years'] > 0){
+			var dateArr = newDate.toString().split('-');
+			var years = int.parse(dateArr[0]);
+			years += dateOffset['years'];
+			var months = int.parse(dateArr[1]);
+			months += dateOffset['months'];
+			years += (months - 1) ~/ 12;
+			months = ((months - 1) % 12) + 1;
+			dateArr[0] = _padLeadingZeros(years.toString(), 4);
+			dateArr[1] = _padLeadingZeros(months.toString(), 2);
+			newDate = DateTime.parse(dateArr.join('-'));
+		}
+		return newDate;
 	}
 
 	String _prettyPrint(int cents){
@@ -74,11 +106,23 @@ class KontoStand extends ChangeNotifier{
 		return (negative ? "-" : "") + splitByComma.join(",");
 	}
 
+	String _padLeadingZeros(String number, int len){
+		var arr = number.split('');
+		while (arr.length < len){
+			arr.insert(0,"0");
+		}
+		return arr.join('');
+	}
+
 	void _loadVariables() async{
 		final prefs = await SharedPreferences.getInstance();
 		_startAmount = prefs.getInt('startAmount') ?? 0;
 		_addAmount = prefs.getInt('addAmount') ?? 0;
-		_startDate = DateTime.parse(prefs.getString('startDate') ?? DateTime.now().toString());
+		_startDate = _utcShift(
+			DateTime.parse(
+				prefs.getString('startDate') ?? DateTime.now().toString().split(' ')[0]
+			)
+		);
 		_dateOffset = prefs.getString('dateOffset') ?? '0-1-0';
 
 		notifyListeners();
@@ -88,12 +132,16 @@ class KontoStand extends ChangeNotifier{
 		final prefs = await SharedPreferences.getInstance();
 		prefs.setInt('startAmount',_startAmount);
 		prefs.setInt('addAmount',_addAmount);
-		prefs.setString('startDate',_startDate.toString());
+		prefs.setString('startDate',_startDate.toString().split(' ')[0]);
 		prefs.setString('dateOffset',_dateOffset);
 
 		if (_notify){
 			notifyListeners();
 		}
 		
+	}
+
+	DateTime _utcShift(DateTime localTime){ //this returns a utc datetime with the same h:m:s as your local time
+		return localTime.add(localTime.timeZoneOffset).toUtc();
 	}
 }

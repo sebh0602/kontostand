@@ -122,6 +122,7 @@ class _SettingsScreenState extends State<SettingsScreen>{
 								}
 
 								void _saveAmountInput(){
+									kontoStand.notify = false;
 									kontoStand.startAmount = '0' + startAmountController.text.replaceAll(',', '.');
 									kontoStand.addAmount = '0' + addAmountController.text.replaceAll(',', '.');
 								}
