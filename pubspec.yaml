@@ -1,5 +1,5 @@
 name: kontostand
-description: A new Flutter project.
+description: An application for tracking your (ideal) progress when saving money.
 
 # The following line prevents the package from being accidentally published to
 # pub.dev using `pub publish`. This is preferred for private packages.
@@ -26,10 +26,17 @@ dependencies:
 
   shared_preferences: ^2.0.5
   provider: ^5.0.0
+  cron: ^0.3.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_launcher_icons: ^0.9.0
+  #flutter pub run flutter_launcher_icons:main
+
+flutter_icons:
+  android: true
+  image_path: 'icon.png'
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

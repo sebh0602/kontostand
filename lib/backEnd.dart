@@ -1,21 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cron/cron.dart';
 
 class KontoStand extends ChangeNotifier{
 	KontoStand(){
 		_loadVariables();
+		final cron = Cron();
+		cron.schedule(Schedule.parse('0 0 * * *'), () {
+			notifyListeners();
+		});
 	}
 
 	int _startAmount = 0;
 	String get startAmount => '${_prettyPrint(_startAmount)}';
 	set startAmount(String s){
 		_startAmount = (double.parse(s)*100).round();
+		_saveVariables();
 	}
 	
 	int _addAmount = 0;
 	String get addAmount => '${_prettyPrint(_addAmount)}';
 	set addAmount(String s){
 		_addAmount = (double.parse(s)*100).round();
+		_saveVariables();
 	}
 	
 	String get currentAmount {
@@ -54,10 +61,8 @@ class KontoStand extends ChangeNotifier{
 		if (_dateOffset != '0-0-0'){
 			while (laterDate.isBefore(_utcShift(DateTime.now()))){
 				oc += 1;
-				print(laterDate);
 				laterDate = _incrementDate(laterDate);
 			}
-			print('--------');
 		}
 
 		return oc;
